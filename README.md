@@ -15,3 +15,36 @@ This project predicts the likelihood of heart disease using machine learning. I 
 5.Ready-to-use template for experimenting with different models
 
 🛠️ Tech Stack
+Python 3.x
+
+scikit-learn
+
+bayes-opt
+
+pandas, numpy
+
+matplotlib, seaborn
+
+📂 Project Structure
+├── Heart_Disease_Prediction.ipynb   # Main notebook with code & results  
+└── README.md                        # Project documentation  
+
+📊 Results
+
+Model: Random Forest with Bayesian Optimization
+
+Accuracy: ~89%
+
+Evaluation Metrics: Accuracy, Precision, Recall, F1-score
+
+📌 Future Improvements
+
+Try XGBoost/LightGBM for higher performance
+
+Add a Streamlit/Flask web app for user-friendly predictions
+
+Deploy the model with Docker/Cloud
+
+🤝 Contributing
+
+Feel free to fork this repo and submit pull requests for improvements!
