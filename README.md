@@ -72,7 +72,7 @@ To run this project locally, follow these steps:
 The project employed a two-stage modeling approach to ensure robust evaluation:
 
 1. **Baseline Model (Logistic Regression)**: An initial model was trained to establish a performance baseline.  
-   * **Accuracy**: \~84%  
+   * **Accuracy**: \~88%  
 2. **Advanced Model (Random Forest with Bayesian Optimization)**: A more complex model was implemented and tuned to find the optimal combination of n\_estimators, max\_depth, and min\_samples\_split.  
    * **Final Test Accuracy**: \~89%
 
