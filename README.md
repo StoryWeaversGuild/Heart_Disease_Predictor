@@ -83,7 +83,7 @@ Two primary models were developed and evaluated. The Random Forest classifier ac
 | Model | Accuracy | Key Technique |
 | :---- | :---- | :---- |
 | **Random Forest** | **\~89%** | Bayesian Optimization |
-| **Logistic Regression \+ Kernel Approximation** | \~86% | Bayesian Optimization (skopt) |
+| **Logistic Regression \+ Kernel Approximation** | \~85% | Bayesian Optimization (skopt) |
 
 A confusion matrix was also generated to provide a more detailed view of the classification performance, showing true positives, true negatives, false positives, and false negatives.
 
