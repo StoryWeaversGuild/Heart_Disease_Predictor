@@ -1,1 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioPredict - AI Heart Disease Prediction</title>
+    
+    <!-- Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0069d9;
+            --secondary-color: #f8f9fa;
+            --text-dark: #212529;
+            --text-light: #6c757d;
+            --border-radius: 0.75rem;
+            --risk-percent: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2f7; /* Slightly cooler background */
+            color: var(--text-dark);
+        }
+
+        /* --- Global Component Styles --- */
+        .page-section {
+            padding: 5rem 0;
+            animation: fadeIn 0.8s ease-out;
+        }
+        #home { padding: 5rem 0; }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+        }
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50rem;
+            transition: all 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 123, 255, 0.2);
+        }
+        .btn-primary-custom:disabled {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* --- Header & Footer --- */
+        .navbar {
+            padding: 1rem 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .navbar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+        }
+        .nav-link { font-weight: 600; color: var(--text-dark); }
+        .nav-link.active, .nav-link:hover { color: var(--primary-color); }
+        .footer {
+            background-color: #ffffff;
+            padding: 3rem 0;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer .social-link:hover { color: var(--primary-color); }
+
+        /* --- NEW Hero Section --- */
+        .hero-container {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(15px) saturate(150%);
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            border-radius: 1.5rem;
+            padding: 4rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+        .hero-title { 
+            font-family: 'Poppins', sans-serif; 
+            font-size: 3.5rem; 
+            font-weight: 700; 
+            background: -webkit-linear-gradient(45deg, var(--primary-color), #34a4ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        #hero-canvas {
+            width: 100%;
+            height: 400px;
+            cursor: grab;
+        }
+        #hero-canvas:active {
+            cursor: grabbing;
+        }
+
+        /* --- About Section / Feature Cards --- */
+        .about-card {
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid #e9ecef;
+        }
+        .about-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); }
+        .about-card h5 { font-family: 'Poppins', sans-serif; }
+        .about-icon { font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem; }
+
+        /* --- Prediction Section --- */
+        .prediction-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.07);
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+        }
+        .form-panel { padding: 2.5rem; }
+        .results-panel { background: linear-gradient(165deg, #343a40 0%, #212529 100%); color: white; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+        .results-panel.low-risk { background: linear-gradient(165deg, #218838 0%, #28a745 100%); }
+        .results-panel.high-risk { background: linear-gradient(165deg, #c82333 0%, #dc3545 100%); }
+        .form-step { display: none; animation: fadeInScale 0.5s forwards; }
+        .form-step.active { display: block; }
+        .selection-card { flex: 1 1 120px; border: 2px solid #e9ecef; border-radius: var(--border-radius); padding: 1rem; cursor: pointer; transition: all 0.2s; position: relative; }
+        .selection-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .selection-card.selected { border-color: var(--primary-color); box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15); }
+        .selection-card .bi-check-circle-fill { position: absolute; top: 8px; right: 8px; font-size: 1.25rem; color: var(--primary-color); transform: scale(0); transition: transform 0.3s ease; }
+        .selection-card.selected .bi-check-circle-fill { transform: scale(1); }
+        .risk-gauge { width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(from 0deg, white calc(var(--risk-percent) * 1%), #ffffff33 0); margin-bottom: 1.5rem; animation: fillGauge 1s ease-out forwards; }
+        .risk-gauge-value { color: #212529; background-color: white; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; font-size: 2rem; font-weight: 700; }
+        .confidence-text { margin-top: -1rem; margin-bottom: 1rem; opacity: 0.8; }
+        
+        /* --- Modal & Timeline --- */
+        .modal-header { border-bottom: none; }
+        .modal-footer { border-top: none; }
+        .timeline { list-style: none; padding: 0; position: relative; }
+        .timeline:before { content: ''; position: absolute; top: 0; bottom: 0; left: 30px; width: 2px; background-color: #e9ecef; }
+        .timeline-item { position: relative; margin-bottom: 2rem; padding-left: 60px; }
+        .timeline-icon { position: absolute; left: 15px; top: 0; width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .timeline-content h6 { font-weight: 700; }
+        .timeline-content p { font-size: 0.95rem; color: var(--text-light); }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="100">
+
+    <!-- Header -->
+    <header class="navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#home"><i class="bi bi-heart-pulse-fill text-primary"></i> CardioPredict</a>
+            <nav id="navbar" class="nav">
+                <a class="nav-link" href="#home">Home</a>
+                <a class="nav-link" href="#about">About</a>
+                <a class="nav-link" href="#prediction">Prediction</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Home Section -->
+    <section id="home" class="page-section">
+        <div class="container">
+            <div class="hero-container">
+                <div class="row align-items-center g-5">
+                    <div class="col-lg-6">
+                        <h1 class="hero-title">Predict Heart Disease with AI Confidence</h1>
+                        <p class="lead my-4 text-secondary">Our advanced machine learning model provides instant, data-driven insights into cardiovascular health. Proactive, precise, and accessible.</p>
+                        <a href="#prediction" class="btn btn-primary-custom btn-lg">Get Started <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <div class="col-lg-6">
+                        <div id="hero-canvas"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="page-section">
+        <div class="container text-center">
+            <h2 class="section-title">About The Project</h2>
+            <p class="section-subtitle">Understanding the purpose, data, and technology behind CardioPredict.</p>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 d-flex">
+                    <div class="about-card text-start w-100 d-flex flex-column">
+                        <div><div class="about-icon"><i class="bi bi-bullseye"></i></div><h5>Our Mission</h5><p>To make preliminary health assessment accessible and empower proactive wellness.</p></div>
+                        <button type="button" class="btn btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#missionModal">Read More <i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </div>
+                 <div class="col-md-6 col-lg-3 d-flex">
+                    <div class="about-card text-start w-100 d-flex flex-column">
+                        <div><div class="about-icon"><i class="bi bi-database-check"></i></div><h5>The Dataset</h5><p>Powered by the Heart Disease Data Set, a widely-used resource in cardiology.</p></div>
+                        <a href="https://www.kaggle.com/datasets/redwankarimsony/heart-disease-data" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary mt-auto">View on Kaggle <i class="bi bi-box-arrow-up-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 d-flex">
+                    <div class="about-card text-start w-100 d-flex flex-column">
+                        <div><div class="about-icon"><i class="bi bi-cpu"></i></div><h5>The ML Model</h5><p>Our prediction is powered by a fine-tuned Random Forest Classifier for high accuracy.</p></div>
+                        <button type="button" class="btn btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#mlModelModal">See Process <i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 d-flex">
+                    <div class="about-card text-start w-100 d-flex flex-column">
+                         <div><div class="about-icon"><i class="bi bi-diagram-3"></i></div><h5>Methodology</h5><p>An end-to-end data science process ensures robust and reliable predictions.</p></div>
+                         <button type="button" class="btn btn-outline-primary mt-auto" data-bs-toggle="modal" data-bs-target="#methodologyModal">See Process <i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prediction Section -->
+    <section id="prediction" class="page-section">
+        <div class="container">
+             <div class="text-center">
+                <h2 class="section-title">Prediction Form</h2>
+                <p class="section-subtitle">Please enter the patient's details to predict the risk of heart disease.</p>
+            </div>
+             <div class="prediction-card">
+                <div class="row g-0">
+                    <div class="col-lg-7 form-panel">
+                        <form id="prediction-form" novalidate>
+                            <!-- Step 1: Basic Info -->
+                            <div class="form-step active" data-step="1">
+                                <div class="slider-group mb-4"><label for="age" class="form-label">Age</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="age" min="1" max="120" value="52" data-target="age-value"><input type="number" class="form-control ms-3" id="age-value" value="52" min="1" max="120" data-target="age"></div></div>
+                                <div class="mb-4"><label class="form-label mb-3">Biological Sex</label><div class="selection-group" data-group="sex"><button type="button" class="selection-card" data-value="1"><i class="bi bi-gender-male"></i><span>Male</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="0"><i class="bi bi-gender-female"></i><span>Female</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="sex" required></div>
+                                <div class="mb-4"><label class="form-label mb-3">Chest Pain Type</label><div class="selection-group" data-group="cp"><button type="button" class="selection-card small" data-value="typical angina"><span>Typical Angina</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card small" data-value="atypical angina"><span>Atypical Angina</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card small" data-value="non-anginal"><span>Non-anginal</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card small" data-value="asymptomatic"><span>Asymptomatic</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="cp" required></div>
+                            </div>
+                            <!-- Step 2: Vitals -->
+                            <div class="form-step" data-step="2">
+                                <div class="slider-group"><label for="trestbps" class="form-label">Resting Blood Pressure (mm Hg)</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="trestbps" min="50" max="300" value="120" data-target="trestbps-value"><input type="number" class="form-control ms-3" id="trestbps-value" value="120" min="50" max="300" data-target="trestbps"></div></div>
+                                <div class="slider-group"><label for="chol" class="form-label">Serum Cholesterol (mg/dl)</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="chol" min="100" max="600" value="210" data-target="chol-value"><input type="number" class="form-control ms-3" id="chol-value" value="210" min="100" max="600" data-target="chol"></div></div>
+                                <div class="mb-4"><label class="form-label mb-3">Fasting Blood Sugar > 120 mg/dl?</label><div class="selection-group" data-group="fbs"><button type="button" class="selection-card" data-value="1"><span>Yes</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="0"><span>No</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="fbs" required></div>
+                                <div class="mb-4"><label class="form-label mb-3">Resting ECG</label><div class="selection-group" data-group="restecg"><button type="button" class="selection-card small" data-value="normal"><span>Normal</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card small" data-value="st-t abnormality"><span>ST-T Abnormality</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card small" data-value="lv hypertrophy"><span>LV Hypertrophy</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="restecg" required></div>
+                            </div>
+                            <!-- Step 3: Clinical Data -->
+                            <div class="form-step" data-step="3">
+                                <div class="slider-group"><label for="thalch" class="form-label">Maximum Heart Rate Achieved</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="thalch" min="50" max="220" value="170" data-target="thalach-value"><input type="number" class="form-control ms-3" id="thalach-value" value="170" min="50" max="220" data-target="thalach"></div></div>
+                                <div class="mb-4"><label class="form-label mb-3">Exercise Induced Angina?</label><div class="selection-group" data-group="exang"><button type="button" class="selection-card" data-value="1"><span>Yes</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="0"><span>No</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="exang" required></div>
+                                <div class="slider-group"><label for="oldpeak" class="form-label">ST Depression (Oldpeak)</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="oldpeak" min="0" max="10" step="0.1" value="1.5" data-target="oldpeak-value"><input type="number" class="form-control ms-3" id="oldpeak-value" value="1.5" min="0" max="10" step="0.1" data-target="oldpeak"></div></div>
+                                <div class="mb-4"><label class="form-label mb-3">Slope of Peak Exercise ST</label><div class="selection-group" data-group="slope"><button type="button" class="selection-card" data-value="upsloping"><span>Upsloping</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="flat"><span>Flat</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="downsloping"><span>Downsloping</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="slope" required></div>
+                                <div class="slider-group"><label for="ca" class="form-label"># Major Vessels (ca)</label><div class="d-flex align-items-center"><input type="range" class="form-range" id="ca" min="0" max="4" value="0" data-target="ca-value"><input type="number" class="form-control ms-3" id="ca-value" value="0" min="0" max="4" data-target="ca"></div></div>
+                                <div class="mb-4"><label class="form-label mb-3">Thalassemia (Thal)</label><div class="selection-group" data-group="thal"><button type="button" class="selection-card" data-value="normal"><span>Normal</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="fixed defect"><span>Fixed Defect</span><i class="bi bi-check-circle-fill"></i></button><button type="button" class="selection-card" data-value="reversable defect"><span>Reversible Defect</span><i class="bi bi-check-circle-fill"></i></button></div><input type="hidden" id="thal" required></div>
+                            </div>
+                            <div class="form-navigation d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary" id="prev-btn" style="display: none;">Previous</button>
+                                <button type="button" class="btn btn-primary" id="next-btn">Next</button>
+                                <button type="submit" class="btn btn-primary-custom" id="submit-btn" style="display: none;">
+                                    <span class="btn-text">Predict Risk</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-5 results-panel">
+                        <div id="initial-state" class="results-panel-content active">
+                            <i class="bi bi-file-earmark-medical" style="font-size: 4rem; opacity: 0.5;"></i>
+                            <h3 class="mt-3">Your Results</h3>
+                            <p>The analysis will appear here once the form is complete.</p>
+                        </div>
+                        <div id="result-state" class="results-panel-content">
+                            <div class="risk-gauge" id="risk-gauge"><div class="risk-gauge-value" id="risk-gauge-value">0%</div></div>
+                            <p class="confidence-text">Confidence Score</p>
+                            <h3 id="result-title" class="mb-3"></h3>
+                            <p id="result-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer and Modals (remain unchanged) -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2025 CardioPredict. All Rights Reserved. This is a demo project and not for medical use.</p>
+            <div class="d-flex justify-content-center gap-4">
+                <a href="#" class="social-link text-body-secondary"><i class="bi bi-github"></i></a>
+                <a href="#" class="social-link text-body-secondary"><i class="bi bi-linkedin"></i></a>
+                <a href="#" class="social-link text-body-secondary"><i class="bi bi-twitter-x"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mission Modal -->
+    <div class="modal fade" id="missionModal" tabindex="-1" aria-labelledby="missionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title section-title" id="missionModalLabel"><i class="bi bi-bullseye text-primary me-2"></i>Our Mission & Values</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <p class="lead">Our mission is to democratize access to preliminary cardiovascular health insights. We empower individuals by providing an accessible, data-driven tool that can facilitate earlier conversations with healthcare professionals and promote a culture of proactive wellness.</p>
+                    <hr class="my-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><div class="value-card"><i class="bi bi-clipboard2-data"></i><h6>Accuracy</h6><p class="small text-secondary">Using robust, well-established ML models to ensure reliable predictions for a preliminary tool.</p></div></div>
+                        <div class="col-md-6"><div class="value-card"><i class="bi bi-universal-access"></i><h6>Accessibility</h6><p class="small text-secondary">Designed to be simple, intuitive, and available to everyone, regardless of technical background.</p></div></div>
+                        <div class="col-md-6"><div class="value-card"><i class="bi bi-shield-check"></i><h6>Privacy</h6><p class="small text-secondary">User data is processed for instant analysis and is never stored. Your privacy and trust are paramount.</p></div></div>
+                        <div class="col-md-6"><div class="value-card"><i class="bi bi-lightbulb"></i><h6>Empowerment</h6><p class="small text-secondary">Providing information that empowers you to ask the right questions and engage with your health.</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Model Modal -->
+    <div class="modal fade" id="mlModelModal" tabindex="-1" aria-labelledby="mlModelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title section-title" id="mlModelModalLabel"><i class="bi bi-cpu text-primary me-2"></i>Machine Learning Workflow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                   <ul class="timeline">
+                       <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-cloud-download"></i></div>
+                           <div class="timeline-content"><h6>1. Data Collection & Preparation</h6><p>We collected data from the Kaggle Heart Disease dataset and prepared it for analysis, which included data cleaning and handling missing values.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-code-slash"></i></div>
+                           <div class="timeline-content"><h6>2. Baseline & Advanced Training</h6><p>Using Scikit-learn, we trained a Logistic Regression model as a baseline, then used a Random Forest Classifier for advanced training and feature importance analysis.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-bar-chart-steps"></i></div>
+                           <div class="timeline-content"><h6>3. Performance Analysis</h6><p>We evaluated the performance and accuracy of multiple algorithms, including Support Vector Machines (SVM), K-Nearest Neighbors (KNN), and XGBoost.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-sliders"></i></div>
+                           <div class="timeline-content"><h6>4. Hyperparameter Tuning</h6><p>We fine-tuned the Random Forest and XGBoost models using advanced techniques like Bayesian Optimization and K-Fold Cross-Validation.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-trophy"></i></div>
+                           <div class="timeline-content"><h6>5. Final Model Selection</h6><p>The Random Forest Classifier achieved the highest accuracy of <strong>89.1%</strong> and was selected as the final model for this application.</p></div>
+                       </li>
+                        <li class="timeline-item">
+                           <div class="timeline-icon"><i class="bi bi-clipboard2-check"></i></div>
+                           <div class="timeline-content"><h6>6. Testing & Validation</h6><p>The fine-tuned model was rigorously tested against a reserved set of testing data to validate its real-world performance.</p></div>
+                       </li>
+                   </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Methodology Modal -->
+    <div class="modal fade" id="methodologyModal" tabindex="-1" aria-labelledby="methodologyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title section-title" id="methodologyModalLabel"><i class="bi bi-diagram-3 text-primary me-2"></i>Data Science Methodology</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                   <ul class="timeline">
+                       <li class="timeline-item">
+                           <div class="timeline-icon">1</div>
+                           <div class="timeline-content"><h6>Data Preparation</h6><p>The process begins with the UCI Heart Disease dataset from Kaggle. We perform initial data cleaning and handle missing values, primarily by imputing the mean for numerical columns to maintain data integrity.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon">2</div>
+                           <div class="timeline-content"><h6>Feature Engineering</h6><p>Categorical features, such as chest pain type and sex, are converted into a numerical format using one-hot encoding. This ensures the data is suitable for a wide range of machine learning algorithms.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon">3</div>
+                           <div class="timeline-content"><h6>Model Training & Evaluation</h6><p>The data is split into an 80/20 training and testing set. We evaluate multiple models, including Logistic Regression (as a baseline), SVM, KNN, and XGBoost, to compare their performance and accuracy on the dataset.</p></div>
+                       </li>
+                       <li class="timeline-item">
+                           <div class="timeline-icon">4</div>
+                           <div class="timeline-content"><h6>Hyperparameter Tuning</h6><p>To maximize performance, we use advanced optimization techniques. Bayesian Optimization combined with K-Fold Cross-Validation is employed to systematically find the best hyperparameters for the top-performing models.</p></div>
+                       </li>
+                   </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 3D Animation (remains unchanged) ---
+        const container = document.getElementById('hero-canvas');
+        if (container) {
+            let scene, camera, renderer, heart, particles;
+            let mouseX = 0, mouseY = 0;
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            function init() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(renderer.domElement);
+
+                const heartShape = new THREE.Shape();
+                heartShape.moveTo(25, 25);
+                heartShape.bezierCurveTo(25, 25, 20, 0, 0, 0);
+                heartShape.bezierCurveTo(-30, 0, -30, 35, -30, 35);
+                heartShape.bezierCurveTo(-30, 55, -10, 77, 25, 95);
+                heartShape.bezierCurveTo(60, 77, 80, 55, 80, 35);
+                heartShape.bezierCurveTo(80, 35, 80, 0, 50, 0);
+                heartShape.bezierCurveTo(35, 0, 25, 25, 25, 25);
+                const extrudeSettings = { depth: 8, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
+                const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+                const material = new THREE.MeshStandardMaterial({ color: 0x007bff, roughness: 0.5, metalness: 0.8 });
+                heart = new THREE.Mesh(geometry, material);
+                heart.scale.set(0.02, 0.02, 0.02);
+                heart.rotation.x = Math.PI;
+                heart.position.y = -1.5;
+                scene.add(heart);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(5, 5, 5);
+                scene.add(directionalLight);
+
+                const particlesGeometry = new THREE.BufferGeometry();
+                const particlesCnt = 500;
+                const posArray = new Float32Array(particlesCnt * 3);
+                for (let i = 0; i < particlesCnt * 3; i++) { posArray[i] = (Math.random() - 0.5) * 10; }
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const particlesMaterial = new THREE.PointsMaterial({ size: 0.02, color: 0x34a4ff });
+                particles = new THREE.Points(particlesGeometry, particlesMaterial);
+                scene.add(particles);
+
+                document.addEventListener('mousemove', onDocumentMouseMove);
+                window.addEventListener('resize', onWindowResize);
+            }
+
+            function onWindowResize() {
+                if (!container.clientWidth || !container.clientHeight) return;
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+            
+            function onDocumentMouseMove(event) {
+                mouseX = (event.clientX - windowHalfX) / 100;
+                mouseY = (event.clientY - windowHalfY) / 100;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const t = performance.now() * 0.001;
+                heart.scale.set(0.02 + Math.sin(t * 5) * 0.001, 0.02 + Math.sin(t * 5) * 0.001, 0.02 + Math.sin(t * 5) * 0.001);
+                heart.rotation.y += 0.005;
+                particles.rotation.y += 0.001;
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+                renderer.render(scene, camera);
+            }
+
+            init();
+            animate();
+        }
+
+        // --- Scrollspy & Form Logic (remains mostly unchanged) ---
+        const bootstrapSpy = new bootstrap.ScrollSpy(document.body, { target: '#navbar', offset: 100 });
+        const form = document.getElementById('prediction-form');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const formSteps = [...form.querySelectorAll('.form-step')];
+        let currentStep = 1;
+        
+        const updateFormStep = () => {
+            formSteps.forEach((step, index) => { step.style.display = index + 1 === currentStep ? 'block' : 'none'; });
+            prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+            nextBtn.style.display = currentStep === formSteps.length ? 'none' : 'inline-block';
+            submitBtn.style.display = currentStep === formSteps.length ? 'inline-block' : 'none';
+        };
+        
+        nextBtn.addEventListener('click', () => { currentStep++; updateFormStep(); });
+        prevBtn.addEventListener('click', () => { currentStep--; updateFormStep(); });
+
+        document.querySelectorAll('.selection-group').forEach(group => {
+            group.addEventListener('click', (e) => {
+                const card = e.target.closest('.selection-card');
+                if (!card) return;
+                document.getElementById(group.dataset.group).value = card.dataset.value;
+                group.querySelectorAll('.selection-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            const numberInput = document.getElementById(slider.dataset.target);
+            slider.addEventListener('input', () => numberInput.value = slider.value);
+            numberInput.addEventListener('input', () => slider.value = numberInput.value);
+        });
+        
+        // --- Form Submission to Backend ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.btn-text').textContent = 'Analyzing...';
+            submitBtn.querySelector('.spinner-border').classList.remove('d-none');
+
+            // Collect form data into a simple object
+            const formData = {
+                age: document.getElementById('age-value').value,
+                sex: document.getElementById('sex').value,
+                cp: document.getElementById('cp').value,
+                trestbps: document.getElementById('trestbps-value').value,
+                chol: document.getElementById('chol-value').value,
+                fbs: document.getElementById('fbs').value,
+                restecg: document.getElementById('restecg').value,
+                thalch: document.getElementById('thalach-value').value,
+                exang: document.getElementById('exang').value,
+                oldpeak: document.getElementById('oldpeak-value').value,
+                slope: document.getElementById('slope').value,
+                ca: document.getElementById('ca-value').value,
+                thal: document.getElementById('thal').value
+            };
+
+            // Send data to the Flask backend
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                console.log('Prediction result:', data);
+                updateResultUI(data.prediction, data.confidence);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while making the prediction. Please check the console.');
+                updateResultUI(0, 0, true); // Reset UI on error
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-text').textContent = 'Predict Risk';
+                submitBtn.querySelector('.spinner-border').classList.add('d-none');
+            });
+        });
+
+        function updateResultUI(risk, confidence, isError = false) {
+            const resultsPanel = document.querySelector('.results-panel');
+            const resultTitle = document.getElementById('result-title');
+            const resultText = document.getElementById('result-text');
+            const riskGauge = document.getElementById('risk-gauge');
+            const riskGaugeValue = document.getElementById('risk-gauge-value');
+            
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('result-state').style.display = 'block';
+
+            if (isError) {
+                resultTitle.textContent = 'Error';
+                resultText.innerHTML = 'Could not get a prediction from the server.';
+                confidence = 0;
+                risk = 0;
+            }
+
+            document.documentElement.style.setProperty('--risk-percent', confidence);
+            riskGauge.style.animation = 'none';
+            void riskGauge.offsetWidth;
+            riskGauge.style.animation = 'fillGauge 1s ease-out forwards';
+            riskGaugeValue.textContent = `${confidence}%`;
+            
+            resultsPanel.classList.remove('low-risk', 'high-risk');
+            if (risk === 1) { // 1 indicates high risk from the model
+                resultsPanel.classList.add('high-risk');
+                resultTitle.textContent = 'High Risk Detected';
+                resultText.innerHTML = `The model predicts a high risk of heart disease.`;
+            } else {
+                resultsPanel.classList.add('low-risk');
+                resultTitle.textContent = 'Low Risk';
+                resultText.innerHTML = `The model predicts a low risk. Continue to maintain a healthy lifestyle.`;
+            }
+        }
+        
+        updateFormStep(); // Initialize form
+    });
+    </script>
+</body>
+</html>
 
